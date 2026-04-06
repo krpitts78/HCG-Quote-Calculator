@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "HCG Quote Calculator (Static)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5500", "--directory", "C:/Users/kelly/Downloads"],
+      "port": 5500
+    }
+  ]
+}

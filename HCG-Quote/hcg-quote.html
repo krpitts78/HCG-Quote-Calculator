@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Houston Centerless — Quote Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #14171c;
+    --surface2: #1c2028;
+    --surface3: #242830;
+    --border: #2c3038;
+    --border2: #3a4050;
+    --accent: #e8a020;
+    --accent2: #f0c060;
+    --text: #e8eaf0;
+    --text2: #9aa0b0;
+    --text3: #5a6070;
+    --green: #3ecf8e;
+    --red: #f06060;
+    --blue: #4090f0;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --display: 'Bebas Neue', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: var(--display);
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    line-height: 1;
+  }
+  .logo-wrap { display: flex; flex-direction: column; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 22px; height: 22px; }
+
+  header nav { display: flex; gap: 4px; }
+  .nav-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { background: var(--surface3); color: var(--text); }
+  .nav-btn.active { background: var(--surface3); color: var(--accent); }
+
+  /* LAYOUT */
+  .app { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+
+  /* LEFT PANEL — QUOTE BUILDER */
+  .panel-left {
+    width: 520px;
+    min-width: 480px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .panel-right {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* SECTION HEADERS */
+  .section {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+  }
+  .section:last-child { border-bottom: none; }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* FORM GRID */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.cols1 { grid-template-columns: 1fr; }
+  .span2 { grid-column: span 2; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .field input, .field select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field input::placeholder { color: var(--text3); }
+  .field select option { background: var(--surface2); }
+
+  /* UNIT BADGE */
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-right: 36px; }
+  .unit {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  /* CALCULATE BUTTON */
+  .calc-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--display);
+    font-size: 20px;
+    letter-spacing: 2px;
+    padding: 12px 24px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .calc-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .calc-btn:active { transform: translateY(0); }
+
+  .adj-slider-wrap {
+    margin-top: 14px;
+  }
+  .adj-slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+  .adj-slider-header span:last-child {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0;
+  }
+  .adj-slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px;
+    margin-top: 4px;
+  }
+  .adj-slider-ticks span {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    text-align: center;
+    width: 24px;
+  }
+  input[type=range]#priceAdj {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]#priceAdj::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #000;
+    cursor: pointer;
+  }
+  input[type=range]#priceAdj::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #000;
+    cursor: pointer;
+  }
+
+  /* RIGHT PANEL */
+  .panel-right-title {
+    font-family: var(--display);
+    font-size: 36px;
+    letter-spacing: 3px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .panel-right-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* QUOTE RESULT */
+  .quote-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .quote-header {
+    background: var(--surface2);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .quote-id {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .quote-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(62,207,142,0.1);
+    color: var(--green);
+    border: 1px solid rgba(62,207,142,0.2);
+  }
+  .quote-status.pending {
+    background: rgba(232,160,32,0.1);
+    color: var(--accent);
+    border-color: rgba(232,160,32,0.2);
+  }
+
+  .quote-body { padding: 20px; }
+
+  .cost-breakdown { display: flex; flex-direction: column; gap: 1px; }
+  .cost-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 3px;
+    transition: background 0.1s;
+  }
+  .cost-line:hover { background: var(--surface3); }
+  .cost-line-label {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cost-line-label .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+  .cost-line-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .cost-line-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cost-line-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+  .cost-line.total {
+    background: rgba(232,160,32,0.08);
+    border: 1px solid rgba(232,160,32,0.2);
+    margin-top: 8px;
+  }
+  .cost-line.total .cost-line-label {
+    font-family: var(--display);
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .cost-line.total .cost-line-label .dot {
+    background: var(--accent);
+    opacity: 1;
+    width: 8px; height: 8px;
+  }
+  .cost-line.total .cost-line-value {
+    font-size: 22px;
+    color: var(--accent);
+  }
+
+  /* METRICS ROW */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metric-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .metric-value.accent { color: var(--accent); }
+  .metric-unit {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    gap: 16px;
+    color: var(--text3);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+  .empty-icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+  .empty-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* TABLES PANEL */
+  .tables-panel { padding: 24px; }
+  .tables-panel .panel-right-title { margin-bottom: 4px; }
+
+  .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .tables-grid.single { grid-template-columns: 1fr; }
+
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .table-card-header {
+    background: var(--surface2);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .add-row-btn {
+    background: rgba(232,160,32,0.1);
+    border: 1px solid rgba(232,160,32,0.2);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .add-row-btn:hover { background: rgba(232,160,32,0.2); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    background: var(--surface3);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .td-input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+    transition: background 0.1s;
+  }
+  .td-input:focus { background: rgba(232,160,32,0.05); }
+
+  .delete-row-btn {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 8px 10px;
+    font-size: 14px;
+    transition: color 0.15s;
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+  .delete-row-btn:hover { color: var(--red); }
+
+  /* TOGGLE CHECKBOX */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s;
+  }
+  .toggle-row:hover { border-color: var(--border2); }
+  .toggle-row.active { border-color: var(--accent); background: rgba(232,160,32,0.06); }
+  .toggle-box {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border2);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    background: var(--surface3);
+  }
+  .toggle-row.active .toggle-box { background: var(--accent); border-color: var(--accent); }
+  .toggle-box svg { display: none; }
+  .toggle-row.active .toggle-box svg { display: block; }
+  .toggle-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    letter-spacing: 0.5px;
+  }
+  .toggle-row.active .toggle-label { color: var(--accent); }
+  .stock-adder-display {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .toggle-row.active .stock-adder-display { color: var(--accent2); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease; }
+
+  /* TABS */
+  .view { display: none; }
+  .view.active { display: flex; height: 100%; }
+
+  .tabs-view { display: none; flex-direction: column; height: 100%; }
+  .tabs-view.active { display: flex; }
+
+  /* PRINT / EXPORT button */
+  .action-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .action-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* QUANTITY */
+  .qty-wrap { display: flex; gap: 8px; align-items: flex-end; }
+
+  /* TOOLTIP */
+  .tip {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* ALERT */
+  .alert {
+    background: rgba(240,96,96,0.1);
+    border: 1px solid rgba(240,96,96,0.2);
+    color: var(--red);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert.show { display: block; }
+
+  @media (max-width: 1100px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="9" stroke="#000" stroke-width="2"/>
+        <circle cx="11" cy="11" r="4" stroke="#000" stroke-width="2"/>
+        <line x1="2" y1="11" x2="7" y2="11" stroke="#000" stroke-width="2"/>
+        <line x1="15" y1="11" x2="20" y2="11" stroke="#000" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="logo-wrap">
+      <span>Houston Centerless</span>
+      <span class="logo-sub">Centerless Quote System</span>
+    </div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="switchView('quote')">Quote Builder</button>
+    <button class="nav-btn" onclick="switchView('tables')">Rate Tables</button>
+  </nav>
+</header>
+
+<div class="app">
+
+  <!-- ====== QUOTE VIEW ====== -->
+  <div class="view active" id="view-quote">
+
+    <!-- LEFT: INPUT PANEL -->
+    <div class="panel-left">
+
+      <!-- RAW STOCK -->
+      <div class="section">
+        <div class="section-title">Raw Stock Dimensions</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Raw OD</label>
+            <div class="input-wrap">
+              <input type="number" id="rawOD" placeholder="0.000" step="0.001" oninput="updateSetupDisplay(); updateStockDisplay();">
+              <span class="unit">in</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Length</label>
+            <div class="input-wrap">
+              <input type="number" id="rawLen" placeholder="0.000" step="0.001">
+              <span class="unit">in</span>
+            </div>
+          </div>
+          <div class="field span2">
+            <label>Stock Condition</label>
+            <div class="toggle-row" id="stockToggle" onclick="toggleStock()">
+              <div class="toggle-box">
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><polyline points="1,4.5 4,7.5 10,1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="toggle-label">Raw OD has oversize stock</span>
+              <span class="stock-adder-display" id="stockAdderDisplay">—</span>
+            </div>
+          </div>
+          <div class="field span2">
+            <label>Material Grade</label>
+            <select id="material"></select>
+          </div>
+          <div class="field span2">
+            <label>Material Condition</label>
+            <select id="condition"></select>
+          </div>
+          <div class="field">
+            <label>Quantity (pcs)</label>
+            <input type="number" id="quantity" value="1" min="1" step="1">
+          </div>
+          <div class="field">
+            <label>Setup Range (auto)</label>
+            <div class="input-wrap">
+              <input type="text" id="setupDisplay" readonly placeholder="Enter Raw OD" style="color:var(--accent);cursor:default;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINISH DIMENSIONS -->
+      <div class="section">
+        <div class="section-title">Finish Dimensions</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Finish OD</label>
+            <div class="input-wrap">
+              <input type="number" id="finOD" placeholder="0.000" step="0.0001">
+              <span class="unit">in</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>OD Tolerance ±</label>
+            <select id="finTol"></select>
+          </div>
+        </div>
+        <p class="tip" style="margin-top:8px">Stock removal: (RawOD² − FinOD²) × π/4 × Length per piece</p>
+      </div>
+
+      <!-- REQUIREMENTS -->
+      <div class="section">
+        <div class="section-title">Requirements</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Surface Finish</label>
+            <select id="surfFinish"></select>
+          </div>
+          <div class="field">
+            <label>Straightness</label>
+            <select id="straightness"></select>
+          </div>
+          <div class="field">
+            <label>Packaging</label>
+            <select id="packaging"></select>
+          </div>
+          <div class="field">
+            <label>Inspection Report</label>
+            <select id="inspection"></select>
+          </div>
+          <div class="field span2">
+            <label>Delivery</label>
+            <select id="delivery"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALCULATE -->
+      <div class="section">
+        <div id="alert-box" class="alert"></div>
+        <button class="calc-btn" onclick="calculate()">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#000" stroke-width="1.5"/><line x1="6" y1="9" x2="12" y2="9" stroke="#000" stroke-width="1.5"/><line x1="9" y1="6" x2="9" y2="12" stroke="#000" stroke-width="1.5"/></svg>
+          GENERATE QUOTE
+        </button>
+      </div>
+
+    </div><!-- end panel-left -->
+
+    <!-- RIGHT: RESULTS PANEL -->
+    <div class="panel-right">
+      <div class="panel-right-title">QUOTE SUMMARY</div>
+      <div class="panel-right-sub">Real-time cost breakdown</div>
+
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">⚙</div>
+        <div class="empty-text">Fill in dimensions &amp; calculate</div>
+      </div>
+
+      <div id="results" style="display:none">
+        <div class="action-bar">
+          <button class="action-btn" onclick="window.print()">⎙ Print Quote</button>
+          <button class="action-btn" onclick="copyQuote()">⧉ Copy Summary</button>
+          <button class="action-btn" onclick="resetForm()">↺ New Quote</button>
+        </div>
+
+        <div class="metrics" id="metrics-row"></div>
+
+        <div class="quote-card fade-in">
+          <div class="quote-header">
+            <span class="quote-id" id="quote-id"></span>
+            <span class="quote-status" id="quote-status">Ready</span>
+          </div>
+          <div class="quote-body">
+            <div class="cost-breakdown" id="cost-breakdown"></div>
+          </div>
+        </div>
+
+        <div class="quote-card fade-in" style="margin-bottom:24px">
+          <div class="quote-body">
+            <div class="adj-slider-wrap" style="margin-top:0">
+              <div class="adj-slider-header">
+                <span>Price Adjustment</span>
+                <span id="sliderDisplay">0%</span>
+              </div>
+              <input type="range" id="priceAdj" min="-15" max="15" step="1" value="0"
+                     list="adj-ticks" oninput="updateSlider()">
+              <datalist id="adj-ticks">
+                <option value="-15"></option><option value="-10"></option><option value="-5"></option>
+                <option value="0"></option><option value="5"></option><option value="10"></option>
+                <option value="15"></option>
+              </datalist>
+              <div class="adj-slider-ticks">
+                <span>-15%</span><span>-10%</span><span>-5%</span><span>0</span><span>5%</span><span>10%</span><span>15%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="weight-summary"></div>
+      </div>
+    </div>
+
+  </div><!-- end view-quote -->
+
+
+  <!-- ====== TABLES VIEW ====== -->
+  <div class="view" id="view-tables" style="overflow-y:auto; flex-direction:column;">
+    <div class="tables-panel">
+      <div class="panel-right-title">RATE TABLES</div>
+      <div class="panel-right-sub">Edit values — changes apply instantly to quotes</div>
+
+      <div class="tables-grid" id="tables-grid"></div>
+    </div>
+  </div>
+
+</div><!-- end app -->
+
+<script>
+// =====================================================================
+// DATA STORE — edit defaults here or via the UI
+// =====================================================================
+const store = {
+  shopRates: [
+    { label: '< 1"',       odThreshold: 1.000, rate: 100 },
+    { label: '1" to 2"',         odThreshold: 2.000, rate: 105 },
+    { label: '2" to 3"',         odThreshold: 3.000, rate: 110 },
+    { label: '3" to 4"',         odThreshold: 4.000, rate: 120 },
+    { label: '4" to 5"',         odThreshold: 5.000, rate: 130 },
+    { label: '5" to 6"',         odThreshold: 6.000, rate: 140 },
+    { label: '6" to 7"',         odThreshold: 7.000, rate: 150 },
+    { label: '7" to 8"',         odThreshold: 8.000, rate: 160 },
+    { label: '8" to 9"',         odThreshold: 9.000, rate: 170 },
+    { label: '9" to 10"',        odThreshold: 10.000, rate: 180 },
+    { label: '10" to 11"',       odThreshold: 11.000, rate: 190 },
+    { label: '11" to 12"',       odThreshold: 12.000, rate: 200 },
+    { label: '12" & Over',       odThreshold: 9999,   rate: 210 },
+  ],
+
+  minimums: [
+    { label: 'Grinding',        key: 'grind',  min: 30 },
+    { label: 'Surface Finish',  key: 'sf',     min: 30 },
+    { label: 'Straightness',    key: 'str',    min: 5  },
+    { label: 'Tolerance',       key: 'tol',    min: 10  },
+  ],
+
+  qtyDiscounts: [
+    { label: '1 pc',    qtyMax: 1,   discount: 0.00 },
+    { label: '2 pcs',   qtyMax: 2,   discount: 0.05 },
+    { label: '3–5 pcs', qtyMax: 5,   discount: 0.10 },
+    { label: '6–10 pcs',qtyMax: 10,  discount: 0.15 },
+    { label: '11–25 pcs',qtyMax: 25, discount: 0.20 },
+    { label: '26+ pcs', qtyMax: 9999,discount: 0.25 },
+  ],
+
+  materials: [
+    { name: '1018 Steel',      removalRate: 1.35, grindFactor: 1.00, density: 0.2840 },
+    { name: '1045 Steel',      removalRate: 1.35, grindFactor: 1.00, density: 0.2840 },
+    { name: '4140 Steel',      removalRate: 1.30, grindFactor: 1.00, density: 0.2840 },
+    { name: '4340 Steel',      removalRate: 1.30, grindFactor: 1.00, density: 0.2840 },
+    { name: '52100 Bearing',   removalRate: 1.25, grindFactor: 1.00, density: 0.2840 },
+    { name: '304 Stainless',   removalRate: 1.00, grindFactor: 1.00, density: 0.2890 },
+    { name: '316 Stainless',   removalRate: 1.00, grindFactor: 1.00, density: 0.2890 },
+    { name: '416 Stainless',   removalRate: 1.40, grindFactor: 1.00, density: 0.2820 },
+    { name: '17-4 PH SS',      removalRate: 1.20, grindFactor: 1.00, density: 0.2820 },
+    { name: '6061 Aluminum',   removalRate: 2.60, grindFactor: 1.00, density: 0.0975 },
+    { name: '7075 Aluminum',   removalRate: 2.60, grindFactor: 1.00, density: 0.1020 },
+    { name: '360 Brass',       removalRate: 2.40, grindFactor: 1.00, density: 0.3070 },
+    { name: 'Titanium 6Al-4V', removalRate: 0.45, grindFactor: 1.00, density: 0.1600 },
+    { name: 'Inconel 625',     removalRate: 0.30, grindFactor: 1.00, density: 0.3050 },
+    { name: 'Tool Steels',     removalRate: 0.65, grindFactor: 1.00, density: 0.2840 },
+    { name: 'Hard Chrome',     removalRate: 0.25, grindFactor: 2.80, density: 0.2600 },   
+    { name: 'Nitronics',       removalRate: 0.70, grindFactor: 1.00, density: 0.2890 },
+    { name: 'Hastelloys',      removalRate: 0.35, grindFactor: 1.00, density: 0.3210 },
+    { name: 'Duplex',          removalRate: 0.60, grindFactor: 1.00, density: 0.282  }
+  ],
+  // removalRate = in³/min, grindFactor = cost multiplier, density = lb/in³
+
+  materialConditions: [
+    { label: 'Hot Rolled',              value: 'HR',  multiplier: 1.05 },
+    { label: 'Cold Finished',           value: 'CF',  multiplier: 1.00 },
+    { label: 'Pre-Straightened / PSQ',  value: 'PSQ', multiplier: .90 },
+    { label: 'Heat Treated',            value: 'HT',  multiplier: 1.10 },
+    { label: 'Annealed',                value: 'ANN', multiplier: 1.0 },    
+  ],
+
+  setupSizes: [
+    { label: '.500" or less',    odMax: 0.500, setupTime: 0.5 },
+    { label: '0.501" – 0.999"',  odMax: 0.999, setupTime: 0.500 },
+    { label: '1.000" – 1.999"',  odMax: 1.999, setupTime: 0.625 },
+    { label: '2.000" – 2.999"',  odMax: 2.999, setupTime: 0.700 },
+    { label: '3.000" – 4.999"',  odMax: 4.999, setupTime: 0.750 },
+    { label: '5.000" – 5.999"',  odMax: 5.999, setupTime: 1.000 },
+    { label: '6.000" – 6.999"',  odMax: 6.999, setupTime: 1.500 },
+    { label: '7.000" – 7.999"',  odMax: 7.999, setupTime: 2.000 },
+    { label: 'Over 8.000"',      odMax: 999,   setupTime: 3.000 },
+  ],
+
+  surfaceFinish: [
+    { label: '> 63 Ra',          time: 0      },
+    { label: '32 Ra PSQ',        time: 2.50 },
+    { label: '20 Ra PSQ',        time: 2.75 },
+    { label: '16 Ra',            time: 3.00 },
+    { label: '8 Ra or less',     time: 4.00 },
+  ],
+
+  straightness: [
+    { label: '0.010"/ft',            time: 0.42 },
+    { label: '0.005"/ft',            time: 0.50 },
+    { label: '0.003"/ft',            time: 0.75 },
+    { label: '0.0015"/ft PSQ',       time: 1.00 },
+    { label: '0.0005"/ft',           time: 2.00 },
+  ],
+
+  boxWeightLimit: 1500,  // lbs per box — used for all packaging types containing "box"
+
+  packaging: [
+    { label: 'Bundle/None',            cost: 0.00   },
+    { label: 'Tube',                   cost: 1.25   },
+    { label: 'Tube & Board',           cost: 3.00   },
+    { label: 'Foam & Cardboard Wrap',  cost: 2.50   },
+    { label: 'Box',                    cost: 7.50   },
+    { label: 'HD Box',                 cost: 10.00  },
+    { label: 'Special HD Box',         cost: 16.75  },
+    { label: 'Net',                    cost: 1.00   },
+  ],
+
+  inspection: [
+    { label: 'None',                                  cost: 0   },
+    { label: 'TIR REPORT',                            cost: 20  },
+    { label: 'Surface Finish Report',                 cost: 20  },
+    { label: 'HCG REPORT (OD,Ra,Ovality,TIR)',        cost: 40  },
+    { label: 'Customer Reports',                      cost: 50  },
+  ],
+
+  delivery: [
+    { label: 'Same Day',        multiplier: 3.0 },
+    { label: '1 Business Day',  multiplier: 2   },
+    { label: '2 Business Days', multiplier: 1.75 },
+    { label: '3 Business Days', multiplier: 1.5 },
+    { label: '5 Business Days', multiplier: 1.25  },
+    { label: 'Standard',        multiplier: 1 },
+  ],
+
+  tolerances: [
+    { label: '.0005"',         value: 0.0005, time: 3.00 },
+    { label: '.001"',          value: 0.001,  time: 2.25 },
+    { label: '.002"',          value: 0.002,  time: 2.00 },
+    { label: '.003"',          value: 0.003,  time: 1.50 },
+    { label: '.005"',          value: 0.005,  time: 1.25 },
+    { label: '.010"',          value: 0.010,  time: 1.00 },
+    { label: 'Clean Up/.030"', value: 0.030,  time: 0    },
+    { label: '.060"',          value: 0.060,  time: 0    },
+  ],
+
+  overstockAllowances: [
+    { odMin: 0,     odMax: 3.999, allowance: 0.060 },
+    { odMin: 4.000, odMax: 5.000, allowance: 0.080 },
+    { odMin: 5.001, odMax: 5.999, allowance: 0.125 },
+    { odMin: 6.000, odMax: 9999,  allowance: 0.187 },
+  ],
+};
+
+// =====================================================================
+// INIT
+// =====================================================================
+function populateSelects() {
+  // Materials
+  const matSel = document.getElementById('material');
+  matSel.innerHTML = store.materials.map((m,i) =>
+    `<option value="${i}">${m.name}</option>`).join('');
+
+  // Material Conditions
+  const condSel = document.getElementById('condition');
+  condSel.innerHTML = store.materialConditions.map((c,i) =>
+    `<option value="${i}">${c.label}${c.multiplier !== 1.00 ? '  (×'+c.multiplier.toFixed(2)+')' : ''}</option>`).join('');
+
+  // Setup size is auto-detected from rawOD — no select needed
+
+  // OD Tolerances
+  const tolSel = document.getElementById('finTol');
+  tolSel.innerHTML = store.tolerances.map((t,i) =>
+    `<option value="${i}">${t.label}${t.time > 0 ? '  ('+t.time.toFixed(2)+' min/ft)' : ''}</option>`).join('');
+
+  // Surface finish
+  const sfSel = document.getElementById('surfFinish');
+  sfSel.innerHTML = store.surfaceFinish.map((s,i) =>
+    `<option value="${i}">${s.label}${s.time > 0 ? ' ('+s.time.toFixed(2)+' min/ft)' : ''}</option>`).join('');
+
+  // Straightness
+  const strSel = document.getElementById('straightness');
+  strSel.innerHTML = store.straightness.map((s,i) =>
+    `<option value="${i}">${s.label} (${s.time.toFixed(2)} min/ft)</option>`).join('');
+
+  // Packaging
+  const pkgSel = document.getElementById('packaging');
+  pkgSel.innerHTML = store.packaging.map((s,i) =>
+    `<option value="${i}">${s.label} (+$${s.cost}/ft)</option>`).join('');
+
+  // Inspection
+  const insSel = document.getElementById('inspection');
+  insSel.innerHTML = store.inspection.map((s,i) =>
+    `<option value="${i}">${s.label} (+$${s.cost}/pc)</option>`).join('');
+
+  // Delivery
+  const delSel = document.getElementById('delivery');
+  delSel.innerHTML = store.delivery.map((s,i) =>
+    `<option value="${i}">${s.label} (×${s.multiplier})</option>`).join('');
+
+  // Defaults
+  matSel.value  = 7;  // 17-4 PH SS
+  tolSel.value  = 2;  // ±.0015"
+  sfSel.value   = 1;  // 32 Ra
+  strSel.value  = 3;  // 0.0015"/ft
+  delSel.value  = 5;  // Standard (1–2 wk)
+  condSel.value = 0; // Hot Rolled
+
+  // Stock condition checked by default
+  hasStock = true;
+  document.getElementById('stockToggle').classList.add('active');
+  updateStockDisplay();
+}
+
+// =====================================================================
+// CALCULATE
+// =====================================================================
+function calculate() {
+  const alertBox = document.getElementById('alert-box');
+  alertBox.classList.remove('show');
+
+  const rawOD  = parseFloat(document.getElementById('rawOD').value);
+  const finOD  = parseFloat(document.getElementById('finOD').value);
+  const length = parseFloat(document.getElementById('rawLen').value);
+  const qty    = parseInt(document.getElementById('quantity').value) || 1;
+  const grindRateEntry = store.shopRates.find(r => rawOD < r.odThreshold) || store.shopRates[store.shopRates.length - 1];
+  const grindRate = grindRateEntry.rate || 120;
+  const priceAdjPct = parseFloat(document.getElementById('priceAdj').value) || 0;
+  const minCharge = 150;
+
+  const matIdx   = parseInt(document.getElementById('material').value);
+  const condIdx  = parseInt(document.getElementById('condition').value);
+  const tolIdx   = parseInt(document.getElementById('finTol').value);
+  const setup    = getSetupForOD(rawOD);
+  const sfIdx    = parseInt(document.getElementById('surfFinish').value);
+  const strIdx   = parseInt(document.getElementById('straightness').value);
+  const pkgIdx   = parseInt(document.getElementById('packaging').value);
+  const insIdx   = parseInt(document.getElementById('inspection').value);
+  const delIdx   = parseInt(document.getElementById('delivery').value);
+
+  // Effective raw OD — add overstock allowance if stock checkbox is checked
+  const overstockEntry = hasStock ? getOverstockAllowance(rawOD) : null;
+  const stockAllowance = overstockEntry ? overstockEntry.allowance : 0;
+  const effectiveRawOD = rawOD + stockAllowance;
+
+  // Validation
+  if (!rawOD || !finOD || !length) {
+    alertBox.textContent = 'Please enter Raw OD, Finish OD, and Length.';
+    alertBox.classList.add('show');
+    return;
+  }
+  if (finOD >= effectiveRawOD) {
+    const note = hasStock ? ` (${rawOD.toFixed(3)}" + ${stockAllowance.toFixed(3)}" stock = ${effectiveRawOD.toFixed(3)}" effective)` : '';
+    alertBox.textContent = `Finish OD must be smaller than effective Raw OD${note}.`;
+    alertBox.classList.add('show');
+    return;
+  }
+  if (length <= 0) {
+    alertBox.textContent = 'Length must be greater than zero.';
+    alertBox.classList.add('show');
+    return;
+  }
+
+  const mat   = store.materials[matIdx];
+  const cond  = store.materialConditions[condIdx];
+  const tol   = store.tolerances[tolIdx];
+  const sf    = store.surfaceFinish[sfIdx];
+  const str   = store.straightness[strIdx];
+  const pkg   = store.packaging[pkgIdx];
+  const ins   = store.inspection[insIdx];
+  const del   = store.delivery[delIdx];
+
+  // Volume of material removed per piece (in³) — uses effectiveRawOD (raw + stock allowance if applicable)
+  const rawArea    = Math.PI * Math.pow(effectiveRawOD/2, 2);
+  const finArea    = Math.PI * Math.pow(finOD/2, 2);
+  const rawVolPc   = rawArea * length;               // total raw cylinder volume per piece
+  const finVolPc   = finArea * length;               // finished cylinder volume per piece
+  const volRemoved = rawVolPc - finVolPc;            // stock removed per piece
+
+  // Weights (lb) using material density
+  const density       = mat.density;                 // lb/in³
+  const rawWeightPc   = rawVolPc  * density;
+  const finWeightPc   = finVolPc  * density;
+  const rawWeightTot  = rawWeightPc  * qty;
+  const finWeightTot  = finWeightPc  * qty;
+
+  // Grind time: removalRate = in³/min base rate for the material
+  const baseRemovalRate = mat.removalRate; // in³/min
+  const grindMinutes = (volRemoved / baseRemovalRate) * mat.grindFactor;
+  const grindHours = grindMinutes / 60;
+  const totalGrindHours = grindHours * qty;
+
+  // Minimums (per piece)
+  const mins = {};
+  store.minimums.forEach(m => { mins[m.key] = m.min; });
+
+  // Grind cost (minimum in minutes, converted to $ via grindRate)
+  const grindCostRaw = totalGrindHours * grindRate;
+  const grindCost = Math.max(grindCostRaw, (mins.grind / 60) * grindRate);
+
+
+  // Qty discount — applies to setup, surface finish, straightness, tolerance
+  const qtyDiscount = store.qtyDiscounts.find(d => qty <= d.qtyMax) || store.qtyDiscounts[store.qtyDiscounts.length - 1];
+  const discountMult = 1 - qtyDiscount.discount;
+
+  // Setup cost — one charge per 0.250" of OD reduction, with qty discount
+  const lengthFt = length / 12;
+  const odReduction   = rawOD - finOD;
+  const setupPasses   = Math.max(1, Math.ceil(odReduction / 0.250));
+  const setupCostFull = setup.setupTime * grindRate * setupPasses;
+  const setupCost     = setupCostFull * discountMult;
+
+  // Time-based costs — mins/ft ÷ 60 × length (ft) × rate × qty, with qty discount
+  const sfCostFull  = (sf.time  / 60) * lengthFt * grindRate * qty;
+  const strCostFull = (str.time / 60) * lengthFt * grindRate * qty;
+  const tolCostFull = (tol.time / 60) * lengthFt * grindRate * qty;
+  const sfCost  = sf.time  > 0 ? Math.max(sfCostFull  * discountMult, (mins.sf  / 60) * grindRate) : 0;
+  const strCost = str.time > 0 ? Math.max(strCostFull * discountMult, (mins.str / 60) * grindRate) : 0;
+  const tolCost = tol.time > 0 ? Math.max(tolCostFull * discountMult, (mins.tol / 60) * grindRate) : 0;
+  const discountSavings = (setupCostFull + sfCostFull + strCostFull + tolCostFull) * qtyDiscount.discount;
+  const insCost = ins.cost * qty;
+
+  const isBoxPkg = pkg.label.toLowerCase().includes('box');
+  let pkgCost, pkgBoxCount = 0;
+  if (isBoxPkg && qty > 1) {
+    pkgBoxCount = Math.ceil(rawWeightTot / store.boxWeightLimit);
+    pkgCost = pkg.cost * lengthFt * pkgBoxCount;
+  } else {
+    pkgCost = pkg.cost * lengthFt * qty;
+  }
+
+  // Material condition multiplier applies to grind + setup + finish adders (not pkg, ins, or delivery)
+  const condBase = grindCost + setupCost + sfCost + strCost + tolCost;
+  const conditionAdder = condBase * (cond.multiplier - 1);
+
+  // Sub-total before delivery
+  const subTotal = condBase + conditionAdder + pkgCost + insCost;
+
+  // Delivery multiplier applies to grind, setup, surface finish, straightness, and tolerance
+  const deliveryBase = grindCost + setupCost + sfCost + strCost + tolCost;
+  const deliveryAdder = deliveryBase * (del.multiplier - 1);
+
+  // Total
+  let total = subTotal + deliveryAdder;
+  total = total * (1 + priceAdjPct / 100);
+  total = Math.max(total, minCharge);
+
+  // Per-piece and per-lb
+  const perPiece  = total / qty;
+  const perLbRaw  = rawWeightPc > 0 ? perPiece / rawWeightPc : 0;
+
+  // ---- Render ----
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+
+  // Quote ID
+  const qid = 'QT-' + Date.now().toString(36).toUpperCase();
+  document.getElementById('quote-id').textContent = qid;
+  document.getElementById('quote-status').textContent = del.multiplier >= 1.5 ? 'RUSH' : 'Ready';
+  document.getElementById('quote-status').className = 'quote-status' + (del.multiplier >= 1.5 ? ' pending' : '');
+
+  // Metrics
+  document.getElementById('metrics-row').innerHTML = `
+    <div class="metric-card">
+      <div class="metric-label">Effective Raw OD</div>
+      <div class="metric-value accent">${effectiveRawOD.toFixed(4)}</div>
+      <div class="metric-unit">${hasStock ? `+${stockAllowance.toFixed(3)}" stock added` : 'no stock allowance'}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Stock Removal</div>
+      <div class="metric-value accent">${volRemoved.toFixed(4)}</div>
+      <div class="metric-unit">in³ / piece</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Grind Time</div>
+      <div class="metric-value">${(grindMinutes).toFixed(2)}</div>
+      <div class="metric-unit">min / piece  ·  ${totalGrindHours.toFixed(3)} hr total</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Price / Piece</div>
+      <div class="metric-value accent">$${perPiece.toFixed(2)}</div>
+      <div class="metric-unit">USD  ·  ${qty} pcs</div>
+    </div>
+  `;
+
+  // Breakdown
+  const grindMinsPc  = grindMinutes;
+  const setupMinsPc  = setup.setupTime * 60;
+  const sfMinsPc     = sf.time  * lengthFt;
+  const strMinsPc    = str.time * lengthFt;
+  const tolMinsPc    = tol.time * lengthFt;
+  const discountPct  = (qtyDiscount.discount * 100).toFixed(0);
+
+  const lines = [
+    { label: `Grinding (${grindMinutes.toFixed(2)} min/pc × $${grindRate}/hr × ${qty} pcs)`, val: grindCost, mins: grindMinsPc },
+    { label: `Machine Setup — ${setup.label} × ${setupPasses} pass${setupPasses > 1 ? 'es' : ''} (${odReduction.toFixed(3)}" ÷ 0.250")`, val: setupCost, mins: setupMinsPc * setupPasses },
+    sfCost  > 0 ? { label: `Surface Finish — ${sf.label} (${sf.time.toFixed(2)} min/ft × ${lengthFt.toFixed(3)} ft/pc)`, val: sfCost, mins: sfMinsPc } : null,
+    strCost > 0 ? { label: `Straightness — ${str.label} (${str.time.toFixed(2)} min/ft × ${lengthFt.toFixed(3)} ft/pc)`, val: strCost, mins: strMinsPc } : null,
+    tolCost > 0 ? { label: `Tolerance — ${tol.label} (${tol.time.toFixed(2)} min/ft × ${lengthFt.toFixed(3)} ft/pc)`, val: tolCost, mins: tolMinsPc } : null,
+    discountSavings > 0 ? { label: `Qty Discount — ${qtyDiscount.label} (−${discountPct}% on setup, finish, straightness & tolerance)`, val: -discountSavings } : null,
+    conditionAdder !== 0 ? { label: `Material Condition — ${cond.label} (×${cond.multiplier.toFixed(2)})`, val: conditionAdder } : null,
+    pkgCost > 0 ? { label: isBoxPkg && qty > 1
+      ? `Packaging — ${pkg.label} × ${lengthFt.toFixed(3)} ft × ${pkgBoxCount} boxes (${rawWeightTot.toFixed(1)} lb ÷ ${store.boxWeightLimit} lb/box)`
+      : `Packaging — ${pkg.label} × ${lengthFt.toFixed(3)} ft × ${qty} pcs`, val: pkgCost } : null,
+    insCost > 0 ? { label: `Inspection — ${ins.label} × ${qty} pcs`, val: insCost } : null,
+    deliveryAdder > 0 ? { label: `Rush Delivery — ${del.label} (×${del.multiplier})`, val: deliveryAdder } : null,
+  ].filter(Boolean);
+
+  document.getElementById('cost-breakdown').innerHTML =
+    lines.map(l => `
+      <div class="cost-line">
+        <span class="cost-line-label"><span class="dot"></span>${l.label}</span>
+        <span class="cost-line-meta">
+          ${l.mins != null ? `<span class="cost-line-time">${l.mins.toFixed(2)} min</span>` : ''}
+          <span class="cost-line-value">$${l.val.toFixed(2)}</span>
+        </span>
+      </div>
+    `).join('') +
+    `<div class="cost-line" style="border-top:1px solid var(--border2);padding-top:8px;margin-top:4px">
+      <span class="cost-line-label"><span class="dot"></span>Price / Piece</span>
+      <span class="cost-line-value">$${perPiece.toFixed(2)}/pc</span>
+    </div>
+    <div class="cost-line total">
+      <span class="cost-line-label"><span class="dot"></span>TOTAL (${qty} pcs)</span>
+      <span class="cost-line-value">$${total.toFixed(2)}</span>
+    </div>`;
+
+  // Weight summary card
+  document.getElementById('weight-summary').innerHTML = `
+    <div class="quote-card fade-in" style="margin-bottom:0">
+      <div class="quote-header">
+        <span class="quote-id">WEIGHT SUMMARY — ${mat.name}  ·  ${density} lb/in³</span>
+      </div>
+      <div class="quote-body">
+        <div class="cost-breakdown">
+          <div class="cost-line">
+            <span class="cost-line-label"><span class="dot"></span>Raw Weight / Piece</span>
+            <span class="cost-line-value">${rawWeightPc.toFixed(3)} lb</span>
+          </div>
+          <div class="cost-line">
+            <span class="cost-line-label"><span class="dot"></span>Finish Weight / Piece</span>
+            <span class="cost-line-value">${finWeightPc.toFixed(3)} lb</span>
+          </div>
+          <div class="cost-line">
+            <span class="cost-line-label"><span class="dot"></span>Raw Weight Total (${qty} pcs)</span>
+            <span class="cost-line-value">${rawWeightTot.toFixed(2)} lb</span>
+          </div>
+          <div class="cost-line">
+            <span class="cost-line-label"><span class="dot"></span>Finish Weight Total (${qty} pcs)</span>
+            <span class="cost-line-value">${finWeightTot.toFixed(2)} lb</span>
+          </div>
+          <div class="cost-line total">
+            <span class="cost-line-label"><span class="dot"></span>PRICE / LB (raw weight, per piece)</span>
+            <span class="cost-line-value">$${perLbRaw.toFixed(3)}/lb</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// =====================================================================
+// SWITCH VIEWS
+// =====================================================================
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+  if (v === 'quote') {
+    document.getElementById('view-quote').classList.add('active');
+    document.querySelectorAll('.nav-btn')[0].classList.add('active');
+  } else {
+    document.getElementById('view-tables').classList.add('active');
+    document.querySelectorAll('.nav-btn')[1].classList.add('active');
+    renderTables();
+  }
+}
+
+// =====================================================================
+// RATE TABLES UI
+// =====================================================================
+function renderTables() {
+  const grid = document.getElementById('tables-grid');
+  grid.innerHTML = '';
+
+  const tableDefs = [
+    {
+      key: 'shopRates',
+      title: 'Shop Rates',
+      cols: ['OD Range', 'Max OD (in)', 'Rate ($/hr)'],
+      fields: ['label', 'odThreshold', 'rate'],
+      newRow: () => ({ label: 'New Rate', odThreshold: 5.0, rate: 120 }),
+    },
+    {
+      key: 'minimums',
+      title: 'Minimum Times (min/pc)',
+      cols: ['Cost Item', 'Minimum (min/pc)'],
+      fields: ['label', 'min'],
+      newRow: () => ({ label: 'New Item', key: 'new', min: 0 }),
+    },
+    {
+      key: 'qtyDiscounts',
+      title: 'Qty Discounts (Setup, Finish, Straightness, Tolerance)',
+      cols: ['Label', 'Max Qty', 'Discount (0.05 = 5%)'],
+      fields: ['label', 'qtyMax', 'discount'],
+      newRow: () => ({ label: 'New Tier', qtyMax: 99, discount: 0 }),
+    },
+    {
+      key: 'materials',
+      title: 'Material Grades',
+      cols: ['Material Name', 'Removal Rate (in³/min)', 'Grind Factor', 'Density (lb/in³)'],
+      fields: ['name', 'removalRate', 'grindFactor', 'density'],
+      newRow: () => ({ name: 'New Material', removalRate: 0.5, grindFactor: 1.0, density: 0.2840 }),
+    },
+    {
+      key: 'materialConditions',
+      title: 'Material Conditions',
+      cols: ['Condition Label', 'Value', 'Price Multiplier'],
+      fields: ['label', 'value', 'multiplier'],
+      newRow: () => ({ label: 'New Condition', value: 'NEW', multiplier: 1.00 }),
+    },
+    {
+      key: 'setupSizes',
+      title: 'Machine Setup Times',
+      cols: ['OD Range Label', 'Max OD (in)', 'Setup Time (hrs)'],
+      fields: ['label', 'odMax', 'setupTime'],
+      newRow: () => ({ label: 'New Range', odMax: 1.0, setupTime: 0.5 }),
+    },
+    {
+      key: 'surfaceFinish',
+      title: 'Surface Finish Times',
+      cols: ['Finish Label', 'Time (min/ft)'],
+      fields: ['label', 'time'],
+      newRow: () => ({ label: 'New Finish', time: 0 }),
+    },
+    {
+      key: 'straightness',
+      title: 'Straightness Times',
+      cols: ['Straightness Label', 'Time (min/ft)'],
+      fields: ['label', 'time'],
+      newRow: () => ({ label: 'New Tolerance', time: 0 }),
+    },
+    {
+      key: 'packaging',
+      title: 'Packaging Options',
+      cols: ['Packaging Label', 'Cost ($/ft)'],
+      fields: ['label', 'cost'],
+      newRow: () => ({ label: 'New Option', cost: 0 }),
+    },
+    {
+      key: 'inspection',
+      title: 'Inspection Reports',
+      cols: ['Inspection Label', 'Cost ($/pc)'],
+      fields: ['label', 'cost'],
+      newRow: () => ({ label: 'New Inspection', cost: 0 }),
+    },
+    {
+      key: 'delivery',
+      title: 'Delivery Options',
+      cols: ['Delivery Label', 'Multiplier'],
+      fields: ['label', 'multiplier'],
+      newRow: () => ({ label: 'New Option', multiplier: 1.0 }),
+    },
+    {
+      key: 'tolerances',
+      title: 'OD Tolerances',
+      cols: ['Tolerance Label', 'Value (in)', 'Time (min/ft)'],
+      fields: ['label', 'value', 'time'],
+      newRow: () => ({ label: '±.XXX"', value: 0.001, time: 0 }),
+    },
+    {
+      key: 'overstockAllowances',
+      title: 'Stock Allowances (Raw OD Has Stock)',
+      cols: ['OD Range Label', 'Max OD (in)', 'Allowance (in)'],
+      fields: ['label', 'odMax', 'allowance'],
+      newRow: () => ({ label: 'New Range', odMax: 1.0, allowance: 0.060 }),
+    },
+  ];
+
+  tableDefs.forEach(def => {
+    const card = document.createElement('div');
+    card.className = 'table-card';
+    card.innerHTML = `
+      <div class="table-card-header">
+        <span class="table-card-title">${def.title}</span>
+        <button class="add-row-btn" onclick="addRow('${def.key}')">+ Add Row</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="tbl-${def.key}">
+          <thead><tr>
+            ${def.cols.map(c => `<th>${c}</th>`).join('')}
+            <th style="width:36px"></th>
+          </tr></thead>
+          <tbody id="tbody-${def.key}">
+          </tbody>
+        </table>
+      </div>
+    `;
+    grid.appendChild(card);
+    renderTableBody(def);
+  });
+
+  // Store defs globally for re-render
+  window._tableDefs = tableDefs;
+}
+
+function renderTableBody(def) {
+  const tbody = document.getElementById(`tbody-${def.key}`);
+  tbody.innerHTML = store[def.key].map((row, i) => `
+    <tr>
+      ${def.fields.map(f => `
+        <td>
+          <input class="td-input" type="text" value="${row[f]}"
+            onchange="updateCell('${def.key}', ${i}, '${f}', this.value)">
+        </td>
+      `).join('')}
+      <td><button class="delete-row-btn" onclick="deleteRow('${def.key}', ${i})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function updateCell(key, rowIdx, field, val) {
+  const numFields = ['removalRate','grindFactor','odMax','setupTime','time','cost','multiplier','density','allowance','odMin','value','rate','odThreshold','qtyMax','discount','min'];
+  store[key][rowIdx][field] = numFields.includes(field) ? parseFloat(val) || 0 : val;
+  populateSelects();
+}
+
+function addRow(key) {
+  const def = window._tableDefs.find(d => d.key === key);
+  store[key].push(def.newRow());
+  renderTableBody(def);
+  populateSelects();
+}
+
+function deleteRow(key, rowIdx) {
+  if (store[key].length <= 1) return;
+  store[key].splice(rowIdx, 1);
+  const def = window._tableDefs.find(d => d.key === key);
+  renderTableBody(def);
+  populateSelects();
+}
+
+// =====================================================================
+// UTIL
+// =====================================================================
+function resetForm() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('rawOD').value = '';
+  document.getElementById('finOD').value = '';
+  document.getElementById('rawLen').value = '';
+  document.getElementById('quantity').value = 1;
+  hasStock = false;
+  document.getElementById('stockToggle').classList.remove('active');
+  document.getElementById('stockAdderDisplay').textContent = '—';
+  document.getElementById('setupDisplay').value = 'Enter Raw OD';
+}
+
+function copyQuote() {
+  const lines = Array.from(document.querySelectorAll('.cost-line'))
+    .map(el => {
+      const lbl = el.querySelector('.cost-line-label').textContent.trim();
+      const val = el.querySelector('.cost-line-value').textContent.trim();
+      return `${lbl}: ${val}`;
+    }).join('\n');
+  const metrics = Array.from(document.querySelectorAll('.metric-card'))
+    .map(el => {
+      const lbl = el.querySelector('.metric-label').textContent;
+      const val = el.querySelector('.metric-value').textContent;
+      const unit = el.querySelector('.metric-unit').textContent;
+      return `${lbl}: ${val} ${unit}`;
+    }).join(' | ');
+  const text = `Houston Centerless Quote\n${document.getElementById('quote-id').textContent}\n\n${metrics}\n\n${lines}`;
+  navigator.clipboard.writeText(text).then(() => alert('Quote copied to clipboard!'));
+}
+
+function getSetupForOD(od) {
+  return store.setupSizes.find(s => od <= s.odMax) || store.setupSizes[store.setupSizes.length - 1];
+}
+
+function getOverstockAllowance(od) {
+  return store.overstockAllowances.find(s => od <= s.odMax) || store.overstockAllowances[store.overstockAllowances.length - 1];
+}
+
+let hasStock = true;
+
+function updateSlider() {
+  const val = parseInt(document.getElementById('priceAdj').value);
+  const display = document.getElementById('sliderDisplay');
+  display.textContent = val === 0 ? '0%' : (val > 0 ? '+' + val + '%' : val + '%');
+  if (document.getElementById('results').style.display !== 'none') calculate();
+}
+
+function toggleStock() {
+  hasStock = !hasStock;
+  const row = document.getElementById('stockToggle');
+  row.classList.toggle('active', hasStock);
+  updateStockDisplay();
+}
+
+function updateStockDisplay() {
+  const od = parseFloat(document.getElementById('rawOD').value);
+  const display = document.getElementById('stockAdderDisplay');
+  if (!od || od <= 0 || !hasStock) {
+    display.textContent = hasStock ? 'Enter Raw OD' : '—';
+    return;
+  }
+  const s = getOverstockAllowance(od);
+  display.textContent = `+${s.allowance.toFixed(3)}" allowance added`;
+}
+
+function updateSetupDisplay() {
+  const od = parseFloat(document.getElementById('rawOD').value);
+  const display = document.getElementById('setupDisplay');
+  if (!od || od <= 0) {
+    display.value = 'Enter Raw OD';
+    return;
+  }
+  const s = getSetupForOD(od);
+  display.value = `${s.label}  —  $${s.setupCost}`;
+}
+
+// =====================================================================
+// BOOT
+populateSelects();
+
+</script>
+</body>
+</html>
