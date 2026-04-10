@@ -759,6 +759,30 @@
             <label>Packaging</label>
             <select id="packaging"></select>
           </div>
+          <div class="field span2" style="gap:8px">
+            <label>Packaging Add-Ons</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div class="toggle-row" id="strapToggle" onclick="toggleStrap()" style="flex:1">
+                <div class="toggle-box">
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><polyline points="1,4.5 4,7.5 10,1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <span class="toggle-label">Straps ($10/ea)</span>
+              </div>
+              <input type="number" id="strapQty" value="1" min="1" step="1" style="width:56px; background:var(--surface2); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:12px; padding:8px 6px; text-align:center; outline:none;" placeholder="#">
+            </div>
+            <div class="toggle-row" id="cradleToggle" onclick="toggleCradle()">
+              <div class="toggle-box">
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><polyline points="1,4.5 4,7.5 10,1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="toggle-label">Cradles (+$1.25/ft)</span>
+            </div>
+            <div class="toggle-row" id="exportToggle" onclick="toggleExport()">
+              <div class="toggle-box">
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><polyline points="1,4.5 4,7.5 10,1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <span class="toggle-label">Export Stamp (+$30)</span>
+            </div>
+          </div>
           <div class="field">
             <label>Inspection Report</label>
             <select id="inspection"></select>
@@ -1177,12 +1201,18 @@ function calculate() {
     pkgCost = pkg.cost * lengthFt * qty;
   }
 
+  // Packaging add-ons
+  const strapQty  = hasStraps ? (parseInt(document.getElementById('strapQty').value) || 1) : 0;
+  const strapCost  = strapQty * 10;
+  const cradleCost = hasCradles ? 1.25 * lengthFt * qty : 0;
+  const exportCost = hasExport ? 30 : 0;
+
   // Material condition multiplier applies to grind + setup + finish adders (not pkg, ins, or delivery)
   const condBase = grindCost + setupCost + sfCost + strCost + tolCost;
   const conditionAdder = condBase * (cond.multiplier - 1);
 
   // Sub-total before delivery
-  const subTotal = condBase + conditionAdder + pkgCost + insCost;
+  const subTotal = condBase + conditionAdder + pkgCost + strapCost + cradleCost + exportCost + insCost;
 
   // Delivery multiplier applies to grind, setup, surface finish, straightness, and tolerance
   const deliveryBase = grindCost + setupCost + sfCost + strCost + tolCost;
@@ -1250,6 +1280,9 @@ function calculate() {
     pkgCost > 0 ? { label: isBoxPkg && qty > 1
       ? `Packaging — ${pkg.label} × ${lengthFt.toFixed(3)} ft × ${pkgBoxCount} boxes (${rawWeightTot.toFixed(1)} lb ÷ ${store.boxWeightLimit} lb/box)`
       : `Packaging — ${pkg.label} × ${lengthFt.toFixed(3)} ft × ${qty} pcs`, val: pkgCost } : null,
+    strapCost > 0 ? { label: `Straps — ${strapQty} × $10.00`, val: strapCost } : null,
+    cradleCost > 0 ? { label: `Cradles — $1.25/ft × ${lengthFt.toFixed(3)} ft × ${qty} pcs`, val: cradleCost } : null,
+    exportCost > 0 ? { label: `Export Stamp`, val: exportCost } : null,
     insCost > 0 ? { label: `Inspection — ${ins.label} × ${qty} pcs`, val: insCost } : null,
     deliveryAdder > 0 ? { label: `Rush Delivery — ${del.label} (×${del.multiplier})`, val: deliveryAdder } : null,
   ].filter(Boolean);
@@ -1501,6 +1534,13 @@ function resetForm() {
   hasStock = false;
   document.getElementById('stockToggle').classList.remove('active');
   document.getElementById('stockAdderDisplay').textContent = '—';
+  hasStraps = false;
+  hasCradles = false;
+  hasExport = false;
+  document.getElementById('strapToggle').classList.remove('active');
+  document.getElementById('cradleToggle').classList.remove('active');
+  document.getElementById('exportToggle').classList.remove('active');
+  document.getElementById('strapQty').value = 1;
   document.getElementById('setupDisplay').value = 'Enter Raw OD';
 }
 
@@ -1531,6 +1571,22 @@ function getOverstockAllowance(od) {
 }
 
 let hasStock = true;
+let hasStraps = false;
+let hasCradles = false;
+let hasExport = false;
+
+function toggleStrap() {
+  hasStraps = !hasStraps;
+  document.getElementById('strapToggle').classList.toggle('active', hasStraps);
+}
+function toggleCradle() {
+  hasCradles = !hasCradles;
+  document.getElementById('cradleToggle').classList.toggle('active', hasCradles);
+}
+function toggleExport() {
+  hasExport = !hasExport;
+  document.getElementById('exportToggle').classList.toggle('active', hasExport);
+}
 
 function updateSlider() {
   const val = parseInt(document.getElementById('priceAdj').value);
