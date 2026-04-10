@@ -1214,8 +1214,8 @@ function calculate() {
   // Sub-total before delivery
   const subTotal = condBase + conditionAdder + pkgCost + strapCost + cradleCost + exportCost + insCost;
 
-  // Delivery multiplier applies to grind, setup, surface finish, straightness, and tolerance
-  const deliveryBase = grindCost + setupCost + sfCost + strCost + tolCost;
+  // Delivery multiplier applies to all costs (not price adjustment slider)
+  const deliveryBase = subTotal;
   const deliveryAdder = deliveryBase * (del.multiplier - 1);
 
   // Total
