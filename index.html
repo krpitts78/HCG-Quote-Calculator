@@ -1071,12 +1071,13 @@ function populateSelects() {
     `<option value="${i}">${s.label} (×${s.multiplier})</option>`).join('');
 
   // Defaults
-  matSel.value  = 7;  // 17-4 PH SS
+  matSel.value  = 6;  // 17-4 PH SS
   tolSel.value  = 2;  // ±.0015"
   sfSel.value   = 1;  // 32 Ra
   strSel.value  = 3;  // 0.0015"/ft
   delSel.value  = 5;  // Standard (1–2 wk)
-  condSel.value = 0; // Hot Rolled
+  condSel.value = 4;  // Annealed
+  pkgSel.value  = 4;  // Box
 
   // Stock condition checked by default
   hasStock = true;
@@ -1193,10 +1194,13 @@ function calculate() {
   const insCost = ins.cost * qty;
 
   const isBoxPkg = pkg.label.toLowerCase().includes('box');
+  const minBoxCharge = 75;
   let pkgCost, pkgBoxCount = 0;
   if (isBoxPkg && qty > 1) {
     pkgBoxCount = Math.ceil(rawWeightTot / store.boxWeightLimit);
-    pkgCost = pkg.cost * lengthFt * pkgBoxCount;
+    pkgCost = Math.max(pkg.cost * lengthFt * pkgBoxCount, minBoxCharge);
+  } else if (isBoxPkg) {
+    pkgCost = Math.max(pkg.cost * lengthFt * qty, minBoxCharge);
   } else {
     pkgCost = pkg.cost * lengthFt * qty;
   }
