@@ -14,12 +14,13 @@ All rate tables and lookup data live in the `store` global object at the top of 
 - `shopRates[]` — $/hr rate tiers by raw OD size
 - `materials[]` — material grades with `removalRate` (in³/min), `grindFactor` (cost multiplier, currently all 1.00), and `density` (lb/in³)
 - `materialConditions[]` — condition multipliers applied to the grind/setup/finish cost base
-- `setupSizes[]` — setup time (hrs) by OD range, auto-detected from raw OD
+- `setupSizes[]` — setup time (hrs) by OD range, auto-detected from raw OD; displayed in the Setup Range field as `hrs`
 - `tolerances[]`, `surfaceFinish[]`, `straightness[]` — time-based adders in min/ft
 - `qtyDiscounts[]` — percentage discounts applied to setup, surface finish, straightness, and tolerance
-- `packaging[]` — cost per foot; box types enforce a $75 minimum charge
+- `packaging[]` — cost per foot; box types enforce a $75 minimum charge; box count is capped at qty (no more boxes than pieces)
+- `boxWeightLimit` — max lbs per box (default 1500 lb); used to calculate number of boxes needed
 - `inspection[]` — cost per piece
-- `delivery[]` — rush multiplier applied to the full subtotal (not the price adjustment slider)
+- `delivery[]` — rush multiplier applied to grinding/processing costs only (grind, setup, surface finish, straightness, tolerance) — not applied to packaging, inspection, or add-ons
 - `overstockAllowances[]` — added to raw OD when "oversize stock" is checked
 
 ### Quote Calculation Flow (`calculate()`)
@@ -31,11 +32,13 @@ All rate tables and lookup data live in the `store` global object at the top of 
 6. Grind cost: `grindHours × shopRate`, enforcing minimum
 7. Setup cost: `setupTime × shopRate × passes` (1 pass per 0.250" OD reduction), with qty discount
 8. Time-based adders (surface finish, straightness, tolerance): `min/ft ÷ 60 × lengthFt × rate × qty`, with qty discount and minimums
-9. Packaging add-ons: straps ($10/ea), cradles ($1.25/ft), export stamp ($30 flat)
-10. Material condition multiplier on grind + setup + finish costs
-11. Delivery/rush multiplier on full subtotal
-12. Price adjustment slider (±15%) on final total
-13. Minimum charge floor: $150
+9. Box count: `Math.min(Math.ceil(totalWeight / boxWeightLimit), qty)` — capped at qty so boxes never exceed pieces
+10. Packaging cost: box types use box count × cost/ft with $75 minimum; non-box types use qty × cost/ft
+11. Packaging add-ons: straps ($10/ea), cradles ($1.25/ft × length × qty), export stamp ($30 flat)
+12. Material condition multiplier on grind + setup + finish costs
+13. Delivery/rush multiplier on processing costs only (grind + setup + surface finish + straightness + tolerance)
+14. Price adjustment slider (±15%) on final total
+15. Minimum charge floor: $150
 
 ### UI Structure
 - **Two views** toggled by nav buttons: Quote Builder and Rate Tables
@@ -48,6 +51,7 @@ All rate tables and lookup data live in the `store` global object at the top of 
 - `calculate()` — main calculation and render entry point
 - `renderTables()` / `renderTableBody()` — builds the Rate Tables UI
 - `updateCell()` / `addRow()` / `deleteRow()` — inline editing of rate tables
+- `updateSetupDisplay()` — auto-fills the Setup Range field with the matched range label and setup time in hours
 - `resetForm()` — clears inputs and resets all toggles
 - `copyQuote()` — copies formatted quote text to clipboard
 
