@@ -1197,7 +1197,7 @@ function calculate() {
   const minBoxCharge = 75;
   let pkgCost, pkgBoxCount = 0;
   if (isBoxPkg && qty > 1) {
-    pkgBoxCount = Math.ceil(rawWeightTot / store.boxWeightLimit);
+    pkgBoxCount = Math.min(Math.ceil(rawWeightTot / store.boxWeightLimit), qty);
     pkgCost = Math.max(pkg.cost * lengthFt * pkgBoxCount, minBoxCharge);
   } else if (isBoxPkg) {
     pkgCost = Math.max(pkg.cost * lengthFt * qty, minBoxCharge);
@@ -1625,7 +1625,7 @@ function updateSetupDisplay() {
     return;
   }
   const s = getSetupForOD(od);
-  display.value = `${s.label}  —  $${s.setupCost}`;
+  display.value = `${s.label}  —  ${s.setupTime.toFixed(3)} hr`;
 }
 
 // =====================================================================
